@@ -50,7 +50,7 @@ int main() {
             if (boton != 0) {
                 state = !state;
                 tm1638.setLed(boton, state);
-                ThisThread::sleep_for(100ms);
+                ThisThread::sleep_for(250ms);
             }
             
              
