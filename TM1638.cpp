@@ -35,7 +35,9 @@ void TM1638::clearDisplay() {
 
 void TM1638::clearLeds()
 {
-   
+   for (int i = 0; i < 8; i++) {
+        setLed(i, 0);
+    }
 }
 uint32_t TM1638::readKeys() {
     uint32_t keys = 0;

@@ -49,6 +49,7 @@ int main() {
     int conteo = 0;
     bool flag1 = 1;
 
+    int ledVUM = 0;
 
     //Menu
     enum Modo 
@@ -82,7 +83,7 @@ int main() {
                 state = !state;
                 tm1638.setLed(1,state);
              }
-                if(boton==1)
+                if(boton==4)
                 {
                     flag1 = !flag1;
                     
@@ -99,7 +100,27 @@ int main() {
                 ThisThread::sleep_for(100ms);
                // eventos.wait_any(1);
                 break;
-                }           
+            case VUMETRO:
+                modoActual = VUMETRO;
+                
+                if (boton == 8) {
+                    ledVUM++;
+                    tm1638.setLed(ledVUM, 1);
+                    ThisThread::sleep_for(100ms);
+                    tm1638.displayNumber(ledVUM);
+                    if (ledVUM == 8) {
+                        ThisThread::sleep_for(600ms);
+                        tm1638.clearLeds();
+                        ledVUM = 0;
+                        tm1638.clearDisplay();
+                    }
+
+                }
+                
+               
+                }    
+
+
              
              
         
