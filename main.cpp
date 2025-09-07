@@ -8,6 +8,7 @@
 #include "TM1638.h"
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 
 // Define los pines que usarás para conectar el TM1638
 #define STB_PIN D10  // Pin de STB (Strobe)
@@ -19,14 +20,17 @@ void leer_botones(void);
 int decodeKey(uint32_t keys);
 
 //variables 
-int conteo = 0;
+
 int boton = 0;
-bool state = 0;
+
+
 
 //hilos y sistema operativo
 Thread T_leer_botones (osPriorityNormal,4096, NULL, NULL);
+Thread T_contador (osPriorityNormal, 4096, NULL, NULL);
 TM1638 tm1638(STB_PIN, CLK_PIN, DIO_PIN);
-
+//eventos
+//EventFlags eventos;
 int main() {
     // Inicializo el display y programa 
  
@@ -40,31 +44,75 @@ int main() {
     tm1638.clearDisplay();          // Limpia el display
 
     //Inicializo variables 
+    bool state = 0;
+
+    int conteo = 0;
+    bool flag1 = 1;
+
+
+    //Menu
+    enum Modo 
+    {
+        IDLEmenu,
+        CONTADORmenu,
+        JUEGO,
+        VUMETRO
+    };
+    int modoActual = IDLEmenu ;
 
     // Arranco hilos 
     T_leer_botones.start(leer_botones);
+    
 
     while (true) 
 
          {
-            if (boton != 0) {
-                state = !state;
-                tm1638.setLed(boton, state);
-                ThisThread::sleep_for(250ms);
-            }
-            
-             
-            
+            switch (modoActual) {
+            case IDLEmenu:
+                tm1638.displayNumber(00000000);
+                ThisThread::sleep_for(100ms);
+                tm1638.clearDisplay();
+                modoActual = boton;
+                //eventos.wait_any(1);
+                break;
+            case CONTADORmenu:
 
-             tm1638.displayNumber(99999999);
+                modoActual = CONTADORmenu;
+                if (boton > 0) {
+                state = !state;
+                tm1638.setLed(1,state);
+             }
+                if(boton==1)
+                {
+                    flag1 = !flag1;
+                    
+                }
+
+                if(flag1 == 1)
+                {
+                    tm1638.displayNumber(conteo++);
+                }else if (flag1 == 0) {
+                    
+                    tm1638.displayNumber(conteo--);
+
+                }
+                ThisThread::sleep_for(100ms);
+               // eventos.wait_any(1);
+                break;
+                }           
+             
+             
+        
              ThisThread::sleep_for(100ms);
         
         }
        
 }
 
+
 void leer_botones(void)
 {
+    int btnLOC = 0;
     while (true) {
         int numButton = 0;
         uint32_t keysDEB = 0;
@@ -72,13 +120,13 @@ void leer_botones(void)
         ThisThread::sleep_for(10ms);
         uint32_t keysCHECK = tm1638.readKeys();
         if (keys == keysCHECK){
-            keysDEB = keys;
-            
+            keysDEB = keys;     
         }else {
             keysDEB = 0;
         }
+
         boton = decodeKey(keysDEB);
-        
+          
         // Imprime la palabra completa y los bytes individuales
        /* uint8_t b0 = (keysDEB >> 0) & 0xFF;
         uint8_t b1 = (keysDEB >> 8) & 0xFF;
@@ -112,11 +160,10 @@ void leer_botones(void)
             case 29:
                 boton = 8;
                 break;
-       }
-        ThisThread::sleep_for(100ms);   
+       } 
+        //eventos.set(1);
+        ThisThread::sleep_for(50ms);
         
-        
-        printf("Bit:%08x Botón: %d\n", keysDEB, boton);
     }
 }
 
